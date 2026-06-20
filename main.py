@@ -37,6 +37,7 @@ GEMINI_TIMEOUT = int(os.getenv("GEMINI_TIMEOUT", "30"))
 TTS_TIMEOUT = int(os.getenv("TTS_TIMEOUT", "15"))
 HTTP_PROXY = os.getenv("HTTP_PROXY")  # Opcional: proxy para Gemini API
 HTTPS_PROXY = os.getenv("HTTPS_PROXY")  # Opcional: proxy para Gemini API
+SOCKS5_PROXY = os.getenv("SOCKS5_PROXY")  # Opcional: proxy SOCKS5 para Gemini API
 
 if not GEMINI_API_KEY:
     raise RuntimeError(
@@ -48,7 +49,11 @@ if not GEMINI_API_KEY:
 if HTTP_PROXY or HTTPS_PROXY:
     os.environ["HTTP_PROXY"] = HTTP_PROXY or ""
     os.environ["HTTPS_PROXY"] = HTTPS_PROXY or ""
-    logger.info(f"🌐 Usando proxy: HTTP={HTTP_PROXY}, HTTPS={HTTPS_PROXY}")
+    logger.info(f"🌐 Usando proxy HTTP/HTTPS: HTTP={HTTP_PROXY}, HTTPS={HTTPS_PROXY}")
+
+if SOCKS5_PROXY:
+    os.environ["ALL_PROXY"] = SOCKS5_PROXY
+    logger.info(f"🌐 Usando proxy SOCKS5: {SOCKS5_PROXY}")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
