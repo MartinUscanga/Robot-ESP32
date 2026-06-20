@@ -27,24 +27,34 @@ from pydub import AudioSegment
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 TTS_LANG = os.getenv("TTS_LANG", "es")
+API_PORT = int(os.getenv("API_PORT", "8000"))
+API_HOST = os.getenv("API_HOST", "0.0.0.0")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+MAX_HISTORIAL = int(os.getenv("MAX_HISTORIAL", "12"))
+GEMINI_TIMEOUT = int(os.getenv("GEMINI_TIMEOUT", "30"))
+TTS_TIMEOUT = int(os.getenv("TTS_TIMEOUT", "15"))
 
 if not GEMINI_API_KEY:
     raise RuntimeError(
-        "Falta GEMINI_API_KEY. Crea un archivo .env basado en .env.example "
+        "❌ Falta GEMINI_API_KEY. Crea un archivo .env basado en .env.example "
         "con tu API key de Gemini (https://aistudio.google.com/apikey)."
     )
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger("robot-bridge")
 
 app = FastAPI(title="Puente ESP32 <-> Gemini", version="1.0.0")
 
 # Personalidad del asistente. Ajusta este texto para cambiar su "carácter".
-PERSONALIDAD = (
+PERSONALIDAD = os.getenv(
+    "PERSONALIDAD",
     "Eres un asistente robot pequeño, gracioso y muy expresivo, hecho con un ESP32. "
     "Respondes siempre en español, de forma breve (máximo 2-3 frases cortas), "
     "natural y conversacional, como si hablaras en voz alta. "
@@ -92,7 +102,7 @@ def generar_respuesta(device_id: str, partes_contenido: list) -> str:
     texto_respuesta = (respuesta.text or "Lo siento, no entendí eso.").strip()
 
     historial.append("Asistente: " + texto_respuesta)
-    historiales[device_id] = historial[-12:]
+    historiales[device_id] = historial[-MAX_HISTORIAL:]
 
     return texto_respuesta
 
@@ -116,7 +126,13 @@ def respuesta_con_audio(texto_respuesta: str) -> Response:
 @app.get("/health")
 def health():
     """Para verificar que el servidor está vivo (útil para monitoreo)."""
-    return {"status": "ok", "modelo": GEMINI_MODEL}
+    return {
+        "status": "ok",
+        "modelo": GEMINI_MODEL,
+        "idioma_tts": TTS_LANG,
+        "dispositivos_activos": len(historiales),
+        "max_historial": MAX_HISTORIAL,
+    }
 
 
 @app.post("/chat")
@@ -162,7 +178,7 @@ async def chat_texto(mensaje: str = Form(...), device_id: str = Form("default"))
 
         historial = historiales.get(device_id, [])
         historial.insert(-1, "Usuario: " + mensaje)
-        historiales[device_id] = historial[-12:]
+        historiales[device_id] = historial[-MAX_HISTORIAL:]
 
         return respuesta_con_audio(texto_respuesta)
 

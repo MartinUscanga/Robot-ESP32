@@ -33,15 +33,45 @@ brew install ffmpeg
 
 ## 2. Configurar tu API key de Gemini
 
-1. Consigue tu API key gratis en: https://aistudio.google.com/apikey
-2. Copia el archivo de ejemplo:
+1. **Obtén tu API key gratis** en: https://aistudio.google.com/apikey
+2. **Copia el archivo de ejemplo**:
    ```bash
    cp .env.example .env
    ```
-3. Edita `.env` y pega tu API key:
+3. **Edita `.env` y configura tus credenciales**:
+   ```bash
+   nano .env  # o usa tu editor favorito
    ```
-   GEMINI_API_KEY=tu_api_key_real_aqui
-   ```
+
+### Variables de entorno disponibles:
+
+| Variable | Requerido | Default | Descripción |
+|----------|-----------|---------|-------------|
+| `GEMINI_API_KEY` | ✅ Sí | - | Tu API key de Gemini |
+| `GEMINI_MODEL` | ⚪ No | `gemini-1.5-flash` | Modelo de IA a usar |
+| `TTS_LANG` | ⚪ No | `es` | Idioma del TTS (es, en, fr, etc.) |
+| `API_PORT` | ⚪ No | `8000` | Puerto del servidor |
+| `API_HOST` | ⚪ No | `0.0.0.0` | Host del servidor |
+| `LOG_LEVEL` | ⚪ No | `INFO` | Nivel de logs (DEBUG, INFO, WARNING, ERROR) |
+| `MAX_HISTORIAL` | ⚪ No | `12` | Mensajes a recordar por conversación |
+| `GEMINI_TIMEOUT` | ⚪ No | `30` | Timeout para Gemini API (segundos) |
+| `TTS_TIMEOUT` | ⚪ No | `15` | Timeout para TTS (segundos) |
+| `PERSONALIDAD` | ⚪ No | *(ver código)* | Personalidad del asistente |
+
+**Ejemplo de configuración mínima** (`.env`):
+```env
+GEMINI_API_KEY=AIzaSyAbC123XYZ_tu_api_key_real_aqui
+```
+
+**Ejemplo de configuración avanzada** (`.env`):
+```env
+GEMINI_API_KEY=AIzaSyAbC123XYZ_tu_api_key_real_aqui
+GEMINI_MODEL=gemini-1.5-pro
+TTS_LANG=es
+LOG_LEVEL=DEBUG
+MAX_HISTORIAL=20
+PERSONALIDAD="Eres un robot asistente formal y profesional que responde de forma concisa."
+```
 
 ## 3. Levantar el servidor (modo de prueba, en tu computadora)
 
@@ -165,10 +195,59 @@ streaming hacia el I2S.
 
 ## 8. Notas sobre el modelo usado
 
-Este proyecto usa `gemini-3.5-flash` por default (configurable en
+Este proyecto usa `gemini-1.5-flash` por default (configurable en
 `.env`), que entiende audio directamente — no necesitas un paso
 separado de "Speech-to-Text". Gemini transcribe y responde en un solo
 paso. La conversión de texto a voz (TTS) se hace con `gTTS` (gratis,
 sin necesidad de otra API key) — si más adelante quieres mejor calidad
 de voz, se puede migrar a las voces nativas de Gemini o a Google Cloud
 TTS sin cambiar el resto de la arquitectura.
+
+## 9. Personalización del asistente
+
+Puedes cambiar la personalidad del robot de dos formas:
+
+**Opción 1: Editar `.env`** (recomendado):
+```env
+PERSONALIDAD="Eres un robot pirata que habla con acento caribeño y termina cada frase con ¡Arrr!"
+```
+
+**Opción 2: Editar `main.py`** directamente:
+```python
+PERSONALIDAD = os.getenv(
+    "PERSONALIDAD",
+    "Tu nueva personalidad aquí..."
+)
+```
+
+Las instrucciones de personalidad deben enfatizar:
+- **Brevedad** (2-3 frases cortas)
+- **No usar markdown** (la respuesta se convierte directamente a voz)
+- **Tono conversacional** (como hablar en voz alta)
+
+## 10. Troubleshooting (solución de problemas comunes)
+
+### ❌ Error: "Falta GEMINI_API_KEY"
+**Solución:** Verifica que existe el archivo `.env` y que contiene tu API key válida.
+
+### ❌ Error: "ffmpeg no encontrado"
+**Solución:** Instala ffmpeg:
+```bash
+sudo apt install ffmpeg  # Linux
+brew install ffmpeg      # Mac
+```
+
+### ❌ Error 500 al llamar `/chat`
+**Solución:** Revisa los logs del servidor. Causas comunes:
+- Formato de audio no soportado (usa WAV o MP3)
+- API key de Gemini inválida o cuota excedida
+- Timeout en la respuesta de Gemini (aumenta `GEMINI_TIMEOUT`)
+
+### ❌ El audio de respuesta suena extraño
+**Solución:** Verifica que el ESP32 esté configurado para reproducir WAV PCM 16kHz mono.
+
+### 🔍 Ver más detalles de ejecución
+Cambia el nivel de logs en `.env`:
+```env
+LOG_LEVEL=DEBUG
+```
