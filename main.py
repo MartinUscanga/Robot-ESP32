@@ -103,21 +103,43 @@ def texto_a_voz_wav(texto: str) -> bytes:
 
 def generar_respuesta(device_id: str, partes_contenido: list) -> str:
     """Llama a Gemini con el contenido (texto y/o audio) y regresa el texto de respuesta."""
+    import time
+    
     historial = historiales.get(device_id, [])
-
     contenido = [PERSONALIDAD] + historial[-6:] + partes_contenido
 
-    respuesta = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=contenido,
-    )
-
-    texto_respuesta = (respuesta.text or "Lo siento, no entendí eso.").strip()
-
-    historial.append("Asistente: " + texto_respuesta)
-    historiales[device_id] = historial[-MAX_HISTORIAL:]
-
-    return texto_respuesta
+    # Reintentar hasta 3 veces si hay error 503
+    max_reintentos = 3
+    for intento in range(max_reintentos):
+        try:
+            respuesta = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=contenido,
+            )
+            
+            texto_respuesta = (respuesta.text or "Lo siento, no entendí eso.").strip()
+            historial.append("Asistente: " + texto_respuesta)
+            historiales[device_id] = historial[-MAX_HISTORIAL:]
+            
+            return texto_respuesta
+            
+        except Exception as e:
+            error_msg = str(e)
+            if "503" in error_msg or "UNAVAILABLE" in error_msg:
+                if intento < max_reintentos - 1:
+                    wait_time = (intento + 1) * 2  # 2, 4, 6 segundos
+                    logger.warning(f"Gemini 503, reintentando en {wait_time}s... (intento {intento+1}/{max_reintentos})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    logger.error(f"Gemini 503 después de {max_reintentos} intentos")
+                    raise HTTPException(
+                        status_code=503,
+                        detail="Gemini API está temporalmente saturada. Intenta de nuevo en unos segundos."
+                    )
+            else:
+                logger.exception("Error en Gemini API")
+                raise
 
 
 def respuesta_con_audio(texto_respuesta: str) -> Response:
