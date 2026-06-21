@@ -10,10 +10,9 @@ import os
 # Configuración de voz
 VOICE_CONFIG = {
     "language_code": os.getenv("TTS_LANGUAGE", "es-MX"),  # es-MX, es-ES, es-US
-    "voice_name": os.getenv("TTS_VOICE_NAME", "es-MX-Neural2-B"),  # Voz masculina neural
-    "gender": texttospeech.SsmlGender.MALE,  # MALE, FEMALE
-    "speaking_rate": float(os.getenv("TTS_SPEAKING_RATE", "1.0")),  # 0.25 a 4.0
-    "pitch": float(os.getenv("TTS_PITCH", "0.0")),  # -20 a 20
+    "voice_name": os.getenv("TTS_VOICE_NAME", "es-MX-Neural2-A"),  # Voz femenina neural cálida
+    "speaking_rate": float(os.getenv("TTS_SPEAKING_RATE", "0.95")),  # 0.25 a 4.0 (más lento = más cálido)
+    "pitch": float(os.getenv("TTS_PITCH", "1.5")),  # -20 a 20 (pitch más alto = voz femenina)
 }
 
 # Cliente global (reutilizable)
@@ -43,11 +42,10 @@ def texto_a_voz_google(texto: str, output_path: str = None) -> bytes:
     # Input de síntesis
     synthesis_input = texttospeech.SynthesisInput(text=texto)
     
-    # Configuración de voz
+    # Configuración de voz (Neural2 no requiere ssml_gender)
     voice = texttospeech.VoiceSelectionParams(
         language_code=VOICE_CONFIG["language_code"],
-        name=VOICE_CONFIG["voice_name"],
-        ssml_gender=VOICE_CONFIG["gender"]
+        name=VOICE_CONFIG["voice_name"]
     )
     
     # Configuración de audio
