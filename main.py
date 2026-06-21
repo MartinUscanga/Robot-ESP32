@@ -37,6 +37,8 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 TTS_LANG = os.getenv("TTS_LANG", "es")
+USE_GOOGLE_TTS = os.getenv("USE_GOOGLE_TTS", "false").lower() == "true"
+TTS_VOICE_NAME = os.getenv("TTS_VOICE_NAME", "es-MX-Neural2-B")
 API_PORT = int(os.getenv("API_PORT", "8000"))
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -109,6 +111,20 @@ TEMP_DIR.mkdir(exist_ok=True)
 
 def texto_a_voz_wav(texto: str) -> bytes:
     """Convierte texto a audio WAV PCM 16kHz mono (formato fácil para el ESP32)."""
+    
+    # Detectar si usar Google Cloud TTS o gTTS
+    USE_GOOGLE_TTS = os.getenv("USE_GOOGLE_TTS", "false").lower() == "true"
+    
+    if USE_GOOGLE_TTS:
+        try:
+            from tts_google import texto_a_voz_google
+            return texto_a_voz_google(texto)
+        except ImportError:
+            logger.warning("⚠️ Google Cloud TTS no disponible, usando gTTS como fallback")
+        except Exception as e:
+            logger.error(f"❌ Error en Google TTS: {e}, usando gTTS como fallback")
+    
+    # Fallback a gTTS (método actual)
     mp3_path = TEMP_DIR / "respuesta.mp3"
     wav_path = TEMP_DIR / "respuesta.wav"
 
