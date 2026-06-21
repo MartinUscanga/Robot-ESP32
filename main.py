@@ -14,6 +14,7 @@ import logging
 from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from dotenv import load_dotenv
 from google import genai
@@ -64,6 +65,15 @@ logging.basicConfig(
 logger = logging.getLogger("robot-bridge")
 
 app = FastAPI(title="Puente ESP32 <-> Gemini", version="1.0.0")
+
+# Configuración de CORS para permitir peticiones desde la interfaz web
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, especifica solo tu dominio
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Personalidad del asistente. Ajusta este texto para cambiar su "carácter".
 PERSONALIDAD = os.getenv(
