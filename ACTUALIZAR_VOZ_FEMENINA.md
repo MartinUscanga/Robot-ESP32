@@ -1,13 +1,22 @@
-# 🎤 Actualizar a Voz Femenina Cálida
+# 🎤 Actualizar a Voz Femenina Cálida con Google Cloud TTS
+
+## ✅ Estado Actual (Funcionando)
+- **Voz configurada:** `es-ES-Standard-A` (Femenina española, calidad estándar)
+- **Motor TTS:** Google Cloud Text-to-Speech ✅
+- **Ya NO usa gTTS** (voz robótica antigua)
 
 ## Problema Resuelto
-La voz anterior era masculina (`es-MX-Neural2-B`) y el código tenía un parámetro incompatible (`ssml_gender`).
+1. La voz anterior era masculina (`es-MX-Neural2-B`)
+2. El código tenía un parámetro incompatible (`ssml_gender`)
+3. Las voces Neural2 de México no estaban disponibles en el proyecto
+4. **Solución:** Usar voces españolas estándar que están disponibles en todos los proyectos
 
 ## Cambios Realizados
-1. ✅ Cambiado a voz femenina: `es-MX-Neural2-A`
+1. ✅ Cambiado a voz femenina española: `es-ES-Standard-A`
 2. ✅ Eliminado parámetro `ssml_gender` (incompatible con Neural2)
 3. ✅ Ajustado `pitch=1.5` para voz más cálida y femenina
 4. ✅ Ajustado `speaking_rate=0.95` para hablar un poco más lento (más cálido)
+5. ✅ Configurado fallback a gTTS si Google Cloud TTS falla
 
 ---
 
@@ -33,12 +42,14 @@ nano .env
 **Contenido necesario:**
 ```env
 USE_GOOGLE_TTS=true
-TTS_VOICE_NAME=es-MX-Neural2-A
-TTS_LANGUAGE=es-MX
+TTS_VOICE_NAME=es-ES-Standard-A
+TTS_LANGUAGE=es-ES
 TTS_SPEAKING_RATE=0.95
 TTS_PITCH=1.5
 GOOGLE_APPLICATION_CREDENTIALS=/home/robot/Robot-ESP32/google-tts-credentials.json
 ```
+
+**NOTA:** Usamos `es-ES-Standard-A` porque las voces Neural2 de México (`es-MX-Neural2-A`) no están disponibles en todos los proyectos de Google Cloud. Las voces Standard están garantizadas en cualquier proyecto.
 
 Guarda con `Ctrl+O`, Enter, `Ctrl+X`
 
@@ -76,12 +87,18 @@ Probar desde la interfaz web:
 
 Si quieres probar otras voces femeninas, edita `TTS_VOICE_NAME` en `.env`:
 
-### Voces Femeninas Recomendadas
-- `es-MX-Neural2-A` ⭐ Mexicana, cálida, natural **(ACTUAL)**
-- `es-ES-Neural2-A` - Española, clara, profesional
+### Voces Españolas Femeninas (Garantizadas)
+- `es-ES-Standard-A` ⭐ **ACTUAL** - Española, clara, buena calidad
+- `es-ES-Wavenet-C` - Española, muy natural, mejor calidad
+- `es-ES-Wavenet-D` - Española, dulce, cálida
+- `es-US-Standard-A` - Latina (USA), neutra
+
+### Voces Neural2 (Máxima Calidad - requiere proyecto con facturación activa)
+- `es-ES-Neural2-A` - Española, profesional, ultra natural
 - `es-ES-Neural2-C` - Española, joven, expresiva
 - `es-ES-Neural2-D` - Española, dulce, amigable
-- `es-US-Neural2-A` - Estadounidense, neutra, clara
+
+**IMPORTANTE:** Si pruebas una voz y da error "Voice does not exist", vuelve a `es-ES-Standard-A` que está garantizada.
 
 ### Ajustar Calidez
 Edita estos valores en `.env` para cambiar el tono:
@@ -116,7 +133,15 @@ Después de cambiar, reinicia la API (paso 4).
 ## 📝 Notas Técnicas
 
 ### ¿Por qué se eliminó `ssml_gender`?
-Las voces Neural2 de Google Cloud TTS no usan este parámetro porque ya tienen un género definido en el nombre de la voz. Usarlo causa errores.
+Las voces Neural2 y modernas de Google Cloud TTS no usan este parámetro porque ya tienen un género definido en el nombre de la voz. Usarlo causa errores.
+
+### ¿Por qué usar `es-ES-Standard-A` en lugar de `es-MX-Neural2-A`?
+Las voces Neural2 de México no están disponibles por defecto en todos los proyectos de Google Cloud. Algunas voces requieren:
+1. Tener facturación activada en el proyecto
+2. Habilitar APIs específicas
+3. Estar en ciertas regiones
+
+Las voces **Standard** están garantizadas en cualquier proyecto gratuito, por eso es la configuración recomendada para máxima compatibilidad.
 
 ### ¿Por qué `pitch=1.5`?
 Un pitch más alto hace que la voz suene más femenina y cálida. El rango recomendado para voz femenina es 1.0-3.0.

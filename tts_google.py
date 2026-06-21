@@ -9,8 +9,8 @@ import os
 
 # Configuración de voz
 VOICE_CONFIG = {
-    "language_code": os.getenv("TTS_LANGUAGE", "es-MX"),  # es-MX, es-ES, es-US
-    "voice_name": os.getenv("TTS_VOICE_NAME", "es-MX-Neural2-A"),  # Voz femenina neural cálida
+    "language_code": os.getenv("TTS_LANGUAGE", "es-ES"),  # es-ES, es-US, es-MX
+    "voice_name": os.getenv("TTS_VOICE_NAME", "es-ES-Standard-A"),  # Voz femenina española estándar
     "speaking_rate": float(os.getenv("TTS_SPEAKING_RATE", "0.95")),  # 0.25 a 4.0 (más lento = más cálido)
     "pitch": float(os.getenv("TTS_PITCH", "1.5")),  # -20 a 20 (pitch más alto = voz femenina)
 }
