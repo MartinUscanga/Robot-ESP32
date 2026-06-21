@@ -21,6 +21,13 @@ from google import genai
 from gtts import gTTS
 from pydub import AudioSegment
 
+# Importar perfil personalizado
+try:
+    from user_profile import generar_prompt_personalizado, PERFIL_USUARIO
+    USAR_PERFIL_PERSONALIZADO = True
+except ImportError:
+    USAR_PERFIL_PERSONALIZADO = False
+
 # ---------------------------------------------------------------------------
 # Configuración
 # ---------------------------------------------------------------------------
@@ -76,14 +83,18 @@ app.add_middleware(
 )
 
 # Personalidad del asistente. Ajusta este texto para cambiar su "carácter".
-PERSONALIDAD = os.getenv(
-    "PERSONALIDAD",
-    "Eres un asistente robot pequeño, gracioso y muy expresivo, hecho con un ESP32. "
-    "Respondes siempre en español, de forma breve (máximo 2-3 frases cortas), "
-    "natural y conversacional, como si hablaras en voz alta. "
-    "No uses markdown, listas, asteriscos ni símbolos raros, porque tu respuesta "
-    "se va a convertir directamente a voz. Tu tono es cálido, divertido y curioso."
-)
+if USAR_PERFIL_PERSONALIZADO:
+    PERSONALIDAD = generar_prompt_personalizado()
+    logger.info(f"✅ Usando perfil personalizado para {PERFIL_USUARIO['nombre_completo']}")
+else:
+    PERSONALIDAD = os.getenv(
+        "PERSONALIDAD",
+        "Eres un asistente robot pequeño, gracioso y muy expresivo, hecho con un ESP32. "
+        "Respondes siempre en español, de forma breve (máximo 2-3 frases cortas), "
+        "natural y conversacional, como si hablaras en voz alta. "
+        "No uses markdown, listas, asteriscos ni símbolos raros, porque tu respuesta "
+        "se va a convertir directamente a voz. Tu tono es cálido, divertido y curioso."
+    )
 
 # Memoria de conversación en RAM, por dispositivo (se borra si reinicia el servidor)
 historiales: dict[str, list[str]] = {}
