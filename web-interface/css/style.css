@@ -1,0 +1,740 @@
+/* ============================================
+   🌸 Estilos Base - Asistente Kawaii Gemini 🌸
+   ============================================ */
+
+:root {
+    /* Colores principales - Paleta pastel kawaii */
+    --primary: #FF9ECD;
+    --secondary: #B4A7FF;
+    --accent: #FFD1DC;
+    --success: #B4F8C8;
+    --warning: #FFF4A3;
+    
+    /* Colores de fondo */
+    --bg-gradient-1: #FFF0F5;
+    --bg-gradient-2: #E6E6FA;
+    --bg-gradient-3: #F0F8FF;
+    
+    /* Colores del personaje */
+    --robot-body: #E8F4F8;
+    --robot-accent: #B4DDE8;
+    --robot-dark: #7BA3B5;
+    
+    /* UI */
+    --text-dark: #5A4A6B;
+    --text-light: #8B7BA8;
+    --white: #FFFFFF;
+    --shadow: rgba(180, 167, 255, 0.3);
+    --shadow-strong: rgba(180, 167, 255, 0.5);
+    
+    /* Espaciado */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+    
+    /* Bordes */
+    --radius-sm: 12px;
+    --radius-md: 20px;
+    --radius-lg: 30px;
+    --radius-full: 50%;
+}
+
+/* Reset y estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Arial Rounded MT Bold', Tahoma, sans-serif;
+    background: linear-gradient(135deg, 
+        var(--bg-gradient-1) 0%, 
+        var(--bg-gradient-2) 50%, 
+        var(--bg-gradient-3) 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: var(--text-dark);
+    position: relative;
+}
+
+/* ============================================
+   🎨 Partículas de Fondo
+   ============================================ */
+
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ============================================
+   📦 Contenedor Principal
+   ============================================ */
+
+.container {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--spacing-lg);
+    min-height: 100vh;
+    align-items: center;
+}
+
+/* ============================================
+   🤖 Área del Personaje
+   ============================================ */
+
+.character-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}
+
+.character {
+    position: relative;
+    transform-origin: center bottom;
+}
+
+.status-text {
+    margin-top: var(--spacing-md);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-align: center;
+    background: var(--white);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 15px var(--shadow);
+    max-width: 250px;
+}
+
+/* Robot - Estructura base */
+.robot-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Antena */
+.antenna {
+    width: 4px;
+    height: 40px;
+    background: var(--robot-dark);
+    border-radius: 10px;
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.antenna-ball {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--primary);
+}
+
+/* Cabeza del robot */
+.robot-head {
+    width: 150px;
+    height: 150px;
+    background: var(--robot-body);
+    border-radius: 40px;
+    position: relative;
+    border: 4px solid var(--robot-accent);
+    box-shadow: 
+        0 10px 30px var(--shadow),
+        inset 0 -5px 15px rgba(255, 255, 255, 0.5);
+}
+
+/* Ojos */
+.eyes {
+    display: flex;
+    justify-content: space-around;
+    padding: 30px 20px 0;
+}
+
+.eye {
+    width: 32px;
+    height: 32px;
+    background: var(--white);
+    border-radius: 50%;
+    border: 3px solid var(--robot-dark);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pupil {
+    width: 12px;
+    height: 12px;
+    background: var(--text-dark);
+    border-radius: 50%;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+/* Mejillas */
+.cheeks {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+    margin-top: 10px;
+}
+
+.cheek {
+    width: 25px;
+    height: 20px;
+    background: var(--primary);
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+/* Boca */
+.mouth {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 35px;
+    overflow: hidden;
+}
+
+.mouth-shape {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--robot-dark);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 0;
+    background: transparent;
+    border-top-color: transparent;
+}
+
+/* Torso */
+.robot-torso {
+    width: 120px;
+    height: 140px;
+    background: var(--robot-body);
+    border-radius: 30px;
+    margin-top: -10px;
+    border: 4px solid var(--robot-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+        0 8px 25px var(--shadow),
+        inset 0 -5px 15px rgba(255, 255, 255, 0.5);
+}
+
+.heart-indicator {
+    font-size: 2.5rem;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* Brazos */
+.arms {
+    position: absolute;
+    top: 150px;
+    width: 180px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.arm {
+    width: 25px;
+    height: 80px;
+    background: var(--robot-body);
+    border: 3px solid var(--robot-accent);
+    border-radius: 15px;
+    box-shadow: 0 4px 10px var(--shadow);
+}
+
+.arm.left {
+    transform: rotate(-15deg);
+    transform-origin: top center;
+}
+
+.arm.right {
+    transform: rotate(15deg);
+    transform-origin: top center;
+}
+
+/* ============================================
+   💬 Área del Chat
+   ============================================ */
+
+.chat-container {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 40px var(--shadow-strong);
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    max-height: 800px;
+    overflow: hidden;
+    border: 3px solid var(--accent);
+}
+
+/* Header del chat */
+.chat-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid var(--accent);
+}
+
+.chat-header h1 {
+    font-size: 1.5rem;
+    color: var(--white);
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.status-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* Área de mensajes */
+.messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    background: linear-gradient(to bottom, var(--bg-gradient-1), var(--white));
+    scroll-behavior: smooth;
+}
+
+.messages-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.messages-area::-webkit-scrollbar-track {
+    background: var(--accent);
+    border-radius: 10px;
+}
+
+.messages-area::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+/* Mensaje de bienvenida */
+.welcome-message {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+    color: var(--text-dark);
+}
+
+.welcome-message .sparkle {
+    font-size: 3rem;
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+.welcome-message p {
+    font-size: 1.2rem;
+    margin: var(--spacing-sm) 0;
+    font-weight: 600;
+}
+
+/* Burbujas de mensaje */
+.message {
+    display: flex;
+    margin-bottom: var(--spacing-md);
+    animation: slideIn 0.3s ease-out;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message.assistant {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: pop 0.3s ease-out;
+}
+
+.message.user .message-bubble {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    border-bottom-right-radius: 5px;
+}
+
+.message.assistant .message-bubble {
+    background: var(--white);
+    color: var(--text-dark);
+    border: 2px solid var(--accent);
+    border-bottom-left-radius: 5px;
+}
+
+.message-text {
+    font-size: 1rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: var(--spacing-xs);
+    text-align: right;
+}
+
+/* Estado de carga */
+.loading-message {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--white);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-md);
+    max-width: 150px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.loading-dots {
+    display: flex;
+    gap: 5px;
+}
+
+.loading-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: bounce 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* ============================================
+   ⌨️ Área de Input
+   ============================================ */
+
+.input-area {
+    padding: var(--spacing-md);
+    background: var(--white);
+    border-top: 2px solid var(--accent);
+}
+
+#chatForm {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+#messageInput {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--text-dark);
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+#messageInput:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 158, 205, 0.2);
+}
+
+#sendButton {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+#sendButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow-strong);
+}
+
+#sendButton:active {
+    transform: translateY(0);
+}
+
+#sendButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.reset-button {
+    width: 100%;
+    padding: var(--spacing-sm);
+    background: var(--warning);
+    color: var(--text-dark);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+    background: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px var(--shadow);
+}
+
+/* ============================================
+   ⚙️ Configuración
+   ============================================ */
+
+.config-button {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px var(--shadow-strong);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.config-button:hover {
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 6px 25px var(--shadow-strong);
+}
+
+.config-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.config-modal.active {
+    display: flex;
+}
+
+.config-content {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlide 0.3s ease-out;
+}
+
+.config-content h2 {
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.8rem;
+}
+
+.config-option {
+    margin-bottom: var(--spacing-md);
+}
+
+.config-option label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.config-option input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+.config-option input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 158, 205, 0.2);
+}
+
+.config-option small {
+    display: block;
+    margin-top: var(--spacing-xs);
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.config-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+}
+
+.config-buttons button {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-button {
+    background: linear-gradient(135deg, var(--success) 0%, var(--primary) 100%);
+    color: var(--text-dark);
+    box-shadow: 0 4px 15px rgba(180, 248, 200, 0.4);
+}
+
+.save-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(180, 248, 200, 0.6);
+}
+
+.close-button {
+    background: var(--accent);
+    color: var(--text-dark);
+    box-shadow: 0 4px 15px rgba(255, 209, 220, 0.4);
+}
+
+.close-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 209, 220, 0.6);
+}
+
+/* ============================================
+   📱 Responsive Design
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .character-area {
+        padding: var(--spacing-sm);
+    }
+    
+    .robot-head {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .robot-torso {
+        width: 100px;
+        height: 120px;
+    }
+    
+    .chat-container {
+        height: 70vh;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: var(--spacing-sm);
+    }
+    
+    .robot-head {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .robot-torso {
+        width: 85px;
+        height: 100px;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+    
+    .chat-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .config-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}

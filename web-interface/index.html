@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Asistente Kawaii Gemini ✨</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Contenedor principal -->
+    <div class="container">
+        <!-- Área del personaje -->
+        <div class="character-area">
+            <div class="character" id="character">
+                <!-- Cuerpo del robot -->
+                <div class="robot-body">
+                    <div class="antenna">
+                        <div class="antenna-ball"></div>
+                    </div>
+                    
+                    <!-- Cabeza -->
+                    <div class="robot-head">
+                        <div class="eyes">
+                            <div class="eye left">
+                                <div class="pupil"></div>
+                            </div>
+                            <div class="eye right">
+                                <div class="pupil"></div>
+                            </div>
+                        </div>
+                        <div class="cheeks">
+                            <div class="cheek left"></div>
+                            <div class="cheek right"></div>
+                        </div>
+                        <div class="mouth">
+                            <div class="mouth-shape"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cuerpo -->
+                    <div class="robot-torso">
+                        <div class="heart-indicator">💚</div>
+                    </div>
+                    
+                    <!-- Brazos -->
+                    <div class="arms">
+                        <div class="arm left"></div>
+                        <div class="arm right"></div>
+                    </div>
+                </div>
+                
+                <!-- Estado del personaje -->
+                <div class="status-text" id="statusText">¡Hola! Soy tu asistente</div>
+            </div>
+        </div>
+        
+        <!-- Área del chat -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>💬 Chat con Gemini</h1>
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-label">Conectado</span>
+                </div>
+            </div>
+            
+            <div class="messages-area" id="messagesArea">
+                <div class="welcome-message">
+                    <div class="sparkle">✨</div>
+                    <p>¡Hola! Soy tu asistente robot kawaii 🤖💕</p>
+                    <p>¡Pregúntame lo que quieras!</p>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <form id="chatForm">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Escribe tu mensaje aquí..." 
+                        autocomplete="off"
+                        maxlength="500"
+                    >
+                    <button type="submit" id="sendButton">
+                        <span class="button-text">Enviar</span>
+                        <span class="button-icon">💌</span>
+                    </button>
+                </form>
+                <button class="reset-button" id="resetButton" title="Reiniciar conversación">
+                    🔄 Reiniciar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Configuración (modal) -->
+    <div class="config-button" id="configButton" title="Configuración">
+        ⚙️
+    </div>
+    
+    <div class="config-modal" id="configModal">
+        <div class="config-content">
+            <h2>⚙️ Configuración</h2>
+            <div class="config-option">
+                <label for="apiUrl">URL de la API:</label>
+                <input type="text" id="apiUrl" placeholder="http://localhost:8000">
+                <small>Ejemplo: http://localhost:8000 o http://tu-vps-ip:8000</small>
+            </div>
+            <div class="config-option">
+                <label for="deviceId">ID del dispositivo:</label>
+                <input type="text" id="deviceId" placeholder="web-interface">
+                <small>Identificador único para mantener tu conversación</small>
+            </div>
+            <div class="config-buttons">
+                <button id="saveConfig" class="save-button">💾 Guardar</button>
+                <button id="closeConfig" class="close-button">❌ Cerrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/assistant.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
