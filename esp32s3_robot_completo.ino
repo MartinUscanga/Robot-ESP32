@@ -27,6 +27,12 @@
 // ============================================================================
 
 // --- Pantalla ST7789 (SPI) ---
+// ⚠️ IMPORTANTE: Verificar que estos pines coincidan con tu conexión física
+// Si la pantalla está en negro, verifica:
+// 1. VCC conectado a 3.3V (NO 5V para el ST7789)
+// 2. GND conectado
+// 3. CS, DC, RST, MOSI, SCK en los pines correctos
+// 4. BL (backlight) conectado a 3.3V o un pin PWM
 #define TFT_CS    10
 #define TFT_DC    11
 #define TFT_RST   12
@@ -91,7 +97,8 @@
 // OBJETOS GLOBALES
 // ============================================================================
 
-Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+// Constructor con pines SPI explícitos para ESP32-S3
+Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCK, TFT_RST);
 
 // ============================================================================
 // ENUMERACIONES (DEBEN IR ANTES DE LAS FORWARD DECLARATIONS)
@@ -147,6 +154,9 @@ void mostrarError(String mensaje);
 // Utilidades
 String base64Decode(String input);
 
+// Debug pantalla
+void testearPantalla();
+
 // ============================================================================
 // VARIABLES GLOBALES
 // ============================================================================
@@ -195,6 +205,10 @@ void setup() {
     estadoActual = ERROR_SISTEMA;
     while(1) { delay(1000); }
   }
+  
+  // ⚠️ TEST TEMPORAL: Descomentar para probar pantalla
+  // testearPantalla();
+  // while(1) { delay(1000); } // Detener aquí para ver el test
   
   // 2. Inicializar I2S para micrófono
   if (!inicializarMicrofono()) {
@@ -272,28 +286,34 @@ void loop() {
 bool inicializarDisplay() {
   Serial.println("🖥️  Inicializando Display ST7789...");
   
-  try {
-    // Configurar SPI manualmente
-    SPI.begin(TFT_SCK, -1, TFT_MOSI, TFT_CS);
-    SPI.setFrequency(40000000); // 40MHz
-    
-    // Inicializar display
-    tft.init(SCREEN_WIDTH, SCREEN_HEIGHT, SPI_MODE2);
-    delay(100);
-    
-    tft.setRotation(0); // Ajustar según orientación deseada
-    tft.fillScreen(COLOR_FONDO);
-    delay(50);
-    
-    // Mostrar pantalla de inicio
-    dibujarPantallaInicio();
-    
-    Serial.println("   ✓ Display inicializado correctamente");
-    return true;
-    
-  } catch (...) {
-    return false;
-  }
+  // Configurar SPI manualmente ANTES de inicializar la pantalla
+  SPI.begin(TFT_SCK, -1, TFT_MOSI, TFT_CS);
+  SPI.setFrequency(27000000); // 27MHz (más estable que 40MHz)
+  
+  // Inicializar display con los parámetros correctos para ST7789
+  tft.init(SCREEN_WIDTH, SCREEN_HEIGHT);
+  delay(100);
+  
+  // Configurar orientación (prueba valores 0, 1, 2, 3)
+  tft.setRotation(0);
+  
+  // Limpiar pantalla con color visible (rojo para prueba)
+  tft.fillScreen(0xF800); // Rojo brillante para verificar que funciona
+  delay(500);
+  
+  // Ahora pintar con el color de fondo
+  tft.fillScreen(COLOR_FONDO);
+  delay(100);
+  
+  // Mostrar pantalla de inicio
+  dibujarPantallaInicio();
+  
+  Serial.println("   ✓ Display inicializado correctamente");
+  Serial.printf("   • Resolución: %dx%d\n", SCREEN_WIDTH, SCREEN_HEIGHT);
+  Serial.printf("   • Pines: CS=%d, DC=%d, RST=%d, MOSI=%d, SCK=%d\n", 
+                TFT_CS, TFT_DC, TFT_RST, TFT_MOSI, TFT_SCK);
+  
+  return true;
 }
 
 
@@ -1077,3 +1097,55 @@ void reproducirAudio(uint8_t* audioData, size_t audioSize) {
   delay(500);
 }
 
+
+
+
+// ============================================================================
+// FUNCIÓN DE PRUEBA DE PANTALLA
+// ============================================================================
+
+void testearPantalla() {
+  Serial.println("\n🔍 === TEST DE PANTALLA ST7789 ===");
+  
+  // Test 1: Pantalla completa roja
+  Serial.println("Test 1: Rojo...");
+  tft.fillScreen(0xF800);
+  delay(1000);
+  
+  // Test 2: Pantalla completa verde
+  Serial.println("Test 2: Verde...");
+  tft.fillScreen(0x07E0);
+  delay(1000);
+  
+  // Test 3: Pantalla completa azul
+  Serial.println("Test 3: Azul...");
+  tft.fillScreen(0x001F);
+  delay(1000);
+  
+  // Test 4: Pantalla blanca
+  Serial.println("Test 4: Blanco...");
+  tft.fillScreen(0xFFFF);
+  delay(1000);
+  
+  // Test 5: Dibujar rectángulos de colores
+  Serial.println("Test 5: Rectángulos...");
+  tft.fillScreen(0x0000); // Negro
+  tft.fillRect(10, 10, 50, 50, 0xF800);   // Rojo
+  tft.fillRect(70, 10, 50, 50, 0x07E0);   // Verde
+  tft.fillRect(130, 10, 50, 50, 0x001F);  // Azul
+  tft.fillRect(190, 10, 50, 50, 0xFFE0);  // Amarillo
+  delay(2000);
+  
+  // Test 6: Texto
+  Serial.println("Test 6: Texto...");
+  tft.fillScreen(0x0000);
+  tft.setTextColor(0xFFFF);
+  tft.setTextSize(2);
+  tft.setCursor(20, 100);
+  tft.println("ST7789 OK!");
+  tft.setCursor(20, 130);
+  tft.println("ESP32-S3");
+  delay(2000);
+  
+  Serial.println("✓ Test de pantalla completado");
+}
