@@ -94,6 +94,37 @@
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
 // ============================================================================
+// DECLARACIONES DE FUNCIONES (Forward Declarations)
+// ============================================================================
+
+// Inicialización
+bool inicializarDisplay();
+bool inicializarMicrofono();
+bool inicializarAltavoz();
+void conectarWiFi();
+
+// Audio
+void iniciarGrabacion();
+size_t grabarAudio(uint8_t* buffer, size_t bufferSize);
+void normalizarAudio(int16_t* samples, size_t numSamples);
+void enviarAudioAPI();
+void reproducirAudio(uint8_t* audioData, size_t audioSize);
+void crearHeaderWAV(uint8_t* header, size_t dataSize);
+
+// Pantalla
+void dibujarPantallaInicio();
+void dibujarCaraKawaii(Emocion emocion);
+void animarCara();
+void mostrarTextoEstado(String texto, uint16_t color);
+void mostrarRespuestaTexto(String texto);
+void dibujarCargando(int dots);
+void mostrarBarraGrabacion(int progreso);
+void mostrarError(String mensaje);
+
+// Utilidades
+String base64Decode(String input);
+
+// ============================================================================
 // ENUMERACIONES
 // ============================================================================
 
@@ -146,8 +177,18 @@ void setup() {
   Serial.println("╚════════════════════════════════════════╝");
   Serial.println();
   
-  // Desactivar watchdog durante inicialización
-  esp_task_wdt_init(30, false);
+  // Configurar watchdog (compatible con Arduino Core 2.0.14+)
+  #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 14)
+    esp_task_wdt_config_t wdt_config = {
+      .timeout_ms = 30000,  // 30 segundos
+      .idle_core_mask = 0,  // No monitorear tareas idle
+      .trigger_panic = false
+    };
+    esp_task_wdt_init(&wdt_config);
+  #else
+    // Para versiones anteriores
+    esp_task_wdt_init(30, false);
+  #endif
   
   // 1. Inicializar Display
   if (!inicializarDisplay()) {
