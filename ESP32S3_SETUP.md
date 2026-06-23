@@ -122,6 +122,8 @@ Altavoz Conexión
 4. Ir a **Herramientas > Placa > Gestor de tarjetas**
 5. Buscar "esp32" e instalar "**ESP32 by Espressif Systems**" (versión 2.0.14 o superior)
 
+**⚠️ Nota**: El código es compatible con Arduino Core 2.0.14+. Si usas una versión anterior, podrías tener errores de compilación relacionados con `esp_task_wdt_init()`.
+
 ### 3. Instalar Bibliotecas Requeridas
 En **Herramientas > Administrar Bibliotecas**, instalar:
 
@@ -252,6 +254,29 @@ Puedes agregar un botón en GPIO 0 para activar la grabación sin computadora.
 ---
 
 ## 🔧 Solución de Problemas
+
+### Errores de Compilación
+
+#### Error: "invalid conversion from 'int' to 'const esp_task_wdt_config_t*'"
+**Causa**: Versión incompatible del Arduino Core ESP32
+
+**Solución**:
+1. Actualizar a ESP32 Arduino Core 2.0.14 o superior
+2. En **Gestor de tarjetas**, desinstalar versión actual
+3. Instalar versión 2.0.14 o más reciente
+4. Reiniciar Arduino IDE
+
+El código incluye compatibilidad automática con ambas versiones.
+
+#### Error: "Adafruit_ST7789 was not declared"
+**Causa**: Bibliotecas no instaladas
+
+**Solución**:
+1. Ir a **Herramientas > Administrar Bibliotecas**
+2. Instalar:
+   - Adafruit GFX Library
+   - Adafruit ST7735 and ST7789 Library
+3. Reiniciar Arduino IDE
 
 ### Pantalla no funciona
 **Síntoma**: Pantalla en blanco o con basura
