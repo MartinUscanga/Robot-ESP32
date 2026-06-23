@@ -162,6 +162,9 @@ String base64Decode(String input);
 // Debug pantalla
 void testearPantalla();
 
+// Debug altavoz
+void testearAltavoz();
+
 // ============================================================================
 // VARIABLES GLOBALES
 // ============================================================================
@@ -237,6 +240,12 @@ void setup() {
   // ⚠️ TEST TEMPORAL: Descomentar para probar pantalla
   // testearPantalla();
   // while(1) { delay(1000); } // Detener aquí para ver el test
+  
+  // ⚠️ TEST TEMPORAL: Descomentar para probar altavoz
+  // Serial.println("\n⏳ Esperando 3 segundos antes del test de altavoz...");
+  // delay(3000);
+  // testearAltavoz();
+  // while(1) { delay(1000); } // Detener aquí después del test
   
   // 2. Inicializar I2S para micrófono
   if (!inicializarMicrofono()) {
@@ -1112,24 +1121,30 @@ void reproducirAudio(uint8_t* audioData, size_t audioSize) {
   Serial.printf("   • Duración aprox: %.1f segundos\n", 
                 (float)pcmSize / (SAMPLE_RATE * sizeof(int16_t)));
   
+  // Limpiar buffer I2S antes de reproducir
+  i2s_zero_dma_buffer(I2S_NUM_TX);
+  
   // Reproducir en bloques
   size_t bytesEscritos = 0;
   size_t totalEscrito = 0;
   size_t bloqueSize = BUFFER_SIZE * 4; // 2KB por bloque
   
   unsigned long inicioReproduccion = millis();
+  int bloquesFallidos = 0;
   
   while (totalEscrito < pcmSize) {
     size_t bytesAEscribir = min(bloqueSize, pcmSize - totalEscrito);
     
+    // Timeout más corto por bloque (100ms)
     esp_err_t result = i2s_write(I2S_NUM_TX, 
                                  pcmData + totalEscrito, 
                                  bytesAEscribir,
                                  &bytesEscritos, 
-                                 portMAX_DELAY);
+                                 pdMS_TO_TICKS(100));
     
-    if (result == ESP_OK) {
+    if (result == ESP_OK && bytesEscritos > 0) {
       totalEscrito += bytesEscritos;
+      bloquesFallidos = 0; // Reset contador de fallos
       
       // Actualizar animación de cara cada 200ms
       if (millis() % 200 < 100) {
@@ -1137,13 +1152,32 @@ void reproducirAudio(uint8_t* audioData, size_t audioSize) {
       }
       
     } else {
-      Serial.printf("   ✗ Error escribiendo I2S: %d\n", result);
-      break;
+      bloquesFallidos++;
+      Serial.printf("   ⚠️  Error I2S write (bloque %d): código %d, bytes: %d\n", 
+                    bloquesFallidos, result, bytesEscritos);
+      
+      // Si falla 10 bloques consecutivos, abortar
+      if (bloquesFallidos > 10) {
+        Serial.println("   ❌ Demasiados errores I2S consecutivos");
+        Serial.println("   ⚠️  PROBLEMA: Altavoz MAX98357A no responde");
+        Serial.println("   Verifica:");
+        Serial.println("      - Pin SD del MAX98357A conectado a 3.3V (HIGH)");
+        Serial.println("      - Pines BCLK=16, LRCK=17, DOUT=15 correctos");
+        Serial.println("      - Alimentación VIN del MAX98357A (3.3V o 5V)");
+        Serial.println("      - Altavoz conectado a + y -");
+        break;
+      }
+      
+      delay(10); // Pequeña pausa antes de reintentar
     }
     
-    // Timeout de seguridad (máximo 30 segundos)
+    // Timeout de seguridad global (máximo 30 segundos)
     if (millis() - inicioReproduccion > 30000) {
-      Serial.println("   ⚠️  Timeout en reproducción");
+      Serial.println("   ⚠️  Timeout en reproducción (30 segundos)");
+      Serial.printf("   • Progreso: %d / %d bytes (%.1f%%)\n", 
+                    totalEscrito, pcmSize, (totalEscrito * 100.0f) / pcmSize);
+      Serial.println("   ⚠️  POSIBLE CAUSA: i2s_write() se bloquea");
+      Serial.println("   Verifica que MAX98357A esté correctamente inicializado");
       break;
     }
   }
@@ -1154,7 +1188,12 @@ void reproducirAudio(uint8_t* audioData, size_t audioSize) {
   
   unsigned long duracion = millis() - inicioReproduccion;
   Serial.printf("   ✓ Reproducción completada en %lu ms\n", duracion);
-  Serial.printf("   • Bytes escritos: %d / %d\n", totalEscrito, pcmSize);
+  Serial.printf("   • Bytes escritos: %d / %d (%.1f%%)\n", 
+                totalEscrito, pcmSize, (totalEscrito * 100.0f) / pcmSize);
+  
+  if (totalEscrito < pcmSize) {
+    Serial.println("   ⚠️  Reproducción incompleta - revisar conexiones I2S TX");
+  }
   
   // Pequeña pausa antes de volver a estar listo
   delay(500);
@@ -1211,4 +1250,65 @@ void testearPantalla() {
   delay(2000);
   
   Serial.println("✓ Test de pantalla completado");
+}
+
+
+
+// ============================================================================
+// FUNCIÓN DE PRUEBA DE ALTAVOZ
+// ============================================================================
+
+void testearAltavoz() {
+  Serial.println("\n🔊 === TEST DE ALTAVOZ MAX98357A ===");
+  
+  // Generar tono de prueba (1kHz durante 1 segundo)
+  int frecuencia = 1000; // Hz
+  int duracion = 1; // segundos
+  int numMuestras = SAMPLE_RATE * duracion;
+  
+  int16_t* tono = (int16_t*)malloc(numMuestras * sizeof(int16_t));
+  if (!tono) {
+    Serial.println("❌ Error: No hay memoria para generar tono");
+    return;
+  }
+  
+  // Generar onda senoidal
+  Serial.printf("Generando tono de %d Hz...\n", frecuencia);
+  for (int i = 0; i < numMuestras; i++) {
+    float t = (float)i / SAMPLE_RATE;
+    float valor = sin(2.0 * PI * frecuencia * t) * 8000; // Amplitud moderada
+    tono[i] = (int16_t)valor;
+  }
+  
+  // Reproducir tono
+  Serial.println("Reproduciendo tono de prueba...");
+  Serial.println("¿Escuchas un pitido de 1 segundo?");
+  
+  size_t bytesEscritos;
+  esp_err_t result = i2s_write(I2S_NUM_TX, 
+                               (const char*)tono, 
+                               numMuestras * sizeof(int16_t),
+                               &bytesEscritos, 
+                               portMAX_DELAY);
+  
+  if (result == ESP_OK) {
+    Serial.printf("✓ Tono enviado: %d bytes\n", bytesEscritos);
+    Serial.println();
+    Serial.println("Si NO escuchaste nada:");
+    Serial.println("  1. Verifica pin SD del MAX98357A → 3.3V");
+    Serial.println("  2. Verifica VIN del MAX98357A → 3.3V o 5V");
+    Serial.println("  3. Verifica altavoz conectado a + y -");
+    Serial.println("  4. Verifica pines: BCLK=16, LRCK=17, DOUT=15");
+    Serial.println("  5. Subir volumen: conectar GAIN del MAX98357A");
+  } else {
+    Serial.printf("❌ Error I2S: %d\n", result);
+    Serial.println("El driver I2S TX no está funcionando correctamente");
+  }
+  
+  free(tono);
+  
+  // Limpiar buffer
+  i2s_zero_dma_buffer(I2S_NUM_TX);
+  
+  Serial.println("\n✓ Test de altavoz completado");
 }
