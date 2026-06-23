@@ -456,8 +456,8 @@ bool inicializarAltavoz() {
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = I2S_COMM_FORMAT_STAND_I2S,
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-    .dma_buf_count = 8,
-    .dma_buf_len = BUFFER_SIZE,
+    .dma_buf_count = 16,      // Aumentado de 8 a 16 para evitar underruns
+    .dma_buf_len = 512,       // Buffer más grande
     .use_apll = false,
     .tx_desc_auto_clear = true,
     .fixed_mclk = 0
@@ -488,6 +488,7 @@ bool inicializarAltavoz() {
   Serial.println("   ✓ Altavoz inicializado correctamente");
   Serial.printf("   • Sample Rate: %d Hz\n", SAMPLE_RATE);
   Serial.printf("   • Bits: %d\n", BITS_PER_SAMPLE);
+  Serial.printf("   • DMA buffers: 16 x 512 bytes (más robusto contra underruns)\n");
   Serial.printf("   • Pines: BCLK=%d, LRCK=%d, DOUT=%d\n", 
                 I2S_SPEAKER_BCLK, I2S_SPEAKER_LRCK, I2S_SPEAKER_DOUT);
   
@@ -1123,41 +1124,49 @@ void reproducirAudio(uint8_t* audioData, size_t audioSize) {
   
   // Limpiar buffer I2S antes de reproducir
   i2s_zero_dma_buffer(I2S_NUM_TX);
+  delay(50); // Pequeña pausa para estabilidad
   
-  // Reproducir en bloques
+  // Reproducir en bloques más grandes para reducir overhead
   size_t bytesEscritos = 0;
   size_t totalEscrito = 0;
-  size_t bloqueSize = BUFFER_SIZE * 4; // 2KB por bloque
+  size_t bloqueSize = 4096; // 4KB por bloque (más grande = menos interrupciones)
   
   unsigned long inicioReproduccion = millis();
   int bloquesFallidos = 0;
+  int bloquesEnviados = 0;
+  
+  Serial.println("   • Iniciando reproducción por bloques...");
   
   while (totalEscrito < pcmSize) {
     size_t bytesAEscribir = min(bloqueSize, pcmSize - totalEscrito);
     
-    // Timeout más corto por bloque (100ms)
+    // Timeout más largo por bloque (500ms para bloques grandes)
     esp_err_t result = i2s_write(I2S_NUM_TX, 
                                  pcmData + totalEscrito, 
                                  bytesAEscribir,
                                  &bytesEscritos, 
-                                 pdMS_TO_TICKS(100));
+                                 pdMS_TO_TICKS(500));
     
     if (result == ESP_OK && bytesEscritos > 0) {
       totalEscrito += bytesEscritos;
       bloquesFallidos = 0; // Reset contador de fallos
+      bloquesEnviados++;
       
-      // Actualizar animación de cara cada 200ms
-      if (millis() % 200 < 100) {
-        dibujarCaraKawaii(HABLANDO);
+      // Mostrar progreso cada 10 bloques
+      if (bloquesEnviados % 10 == 0) {
+        float progreso = (totalEscrito * 100.0f) / pcmSize;
+        Serial.printf("   • Progreso: %.1f%%\r", progreso);
       }
+      
+      // NO actualizar cara aquí - causa delays que interrumpen el audio
       
     } else {
       bloquesFallidos++;
       Serial.printf("   ⚠️  Error I2S write (bloque %d): código %d, bytes: %d\n", 
-                    bloquesFallidos, result, bytesEscritos);
+                    bloquesEnviados + 1, result, bytesEscritos);
       
-      // Si falla 10 bloques consecutivos, abortar
-      if (bloquesFallidos > 10) {
+      // Si falla 5 bloques consecutivos, abortar
+      if (bloquesFallidos > 5) {
         Serial.println("   ❌ Demasiados errores I2S consecutivos");
         Serial.println("   ⚠️  PROBLEMA: Altavoz MAX98357A no responde");
         Serial.println("   Verifica:");
@@ -1182,9 +1191,11 @@ void reproducirAudio(uint8_t* audioData, size_t audioSize) {
     }
   }
   
-  // Esperar a que termine de reproducir el buffer DMA
+  Serial.println(); // Nueva línea después del progreso
+  
+  // Esperar a que termine de reproducir el buffer DMA (importante!)
+  delay(200); // Dar tiempo al DMA
   i2s_zero_dma_buffer(I2S_NUM_TX);
-  delay(100);
   
   unsigned long duracion = millis() - inicioReproduccion;
   Serial.printf("   ✓ Reproducción completada en %lu ms\n", duracion);
