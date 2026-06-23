@@ -47,7 +47,14 @@ ESP32 (texto/audio) ──► [API FastAPI] ──► Gemini AI
 | Fuente 5V/1A | Micro USB o DC Jack | 1 | $3-5 USD |
 | **TOTAL** | | | **~$25-35 USD** |
 
-Ver [DIAGRAMA_CONEXION.md](DIAGRAMA_CONEXION.md) para diagrama detallado de conexiones.
+**⚙️ Configuración de Pines:**
+- CS → GPIO 10
+- DC → GPIO 11  
+- RST → GPIO 12
+- MOSI → GPIO 13
+- SCK → GPIO 14
+
+Ver [DIAGRAMA_CONEXION_CUSTOM.md](DIAGRAMA_CONEXION_CUSTOM.md) para diagrama detallado con estos pines personalizados.
 
 ---
 

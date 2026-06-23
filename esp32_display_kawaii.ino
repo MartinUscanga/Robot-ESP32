@@ -33,11 +33,11 @@ const char* API_URL = "http://18.221.246.87:8000/chat/texto";
 const char* DEVICE_ID = "robot-kawaii-01";
 
 // ========== CONFIGURACIÓN ST7789 ==========
-#define TFT_CS    5
-#define TFT_DC    2
-#define TFT_RST   15
-#define TFT_MOSI  23
-#define TFT_SCLK  18
+#define TFT_CS    10
+#define TFT_DC    11
+#define TFT_RST   12
+#define TFT_MOSI  13
+#define TFT_SCLK  14
 
 // Crear objeto display
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
