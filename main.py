@@ -14,11 +14,19 @@ import logging
 from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from dotenv import load_dotenv
 from google import genai
 from gtts import gTTS
 from pydub import AudioSegment
+
+# Importar perfil personalizado
+try:
+    from user_profile import generar_prompt_personalizado, PERFIL_USUARIO
+    USAR_PERFIL_PERSONALIZADO = True
+except ImportError:
+    USAR_PERFIL_PERSONALIZADO = False
 
 # ---------------------------------------------------------------------------
 # Configuración
@@ -29,6 +37,8 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 TTS_LANG = os.getenv("TTS_LANG", "es")
+USE_GOOGLE_TTS = os.getenv("USE_GOOGLE_TTS", "false").lower() == "true"
+TTS_VOICE_NAME = os.getenv("TTS_VOICE_NAME", "es-MX-Neural2-B")
 API_PORT = int(os.getenv("API_PORT", "8000"))
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -65,15 +75,28 @@ logger = logging.getLogger("robot-bridge")
 
 app = FastAPI(title="Puente ESP32 <-> Gemini", version="1.0.0")
 
-# Personalidad del asistente. Ajusta este texto para cambiar su "carácter".
-PERSONALIDAD = os.getenv(
-    "PERSONALIDAD",
-    "Eres un asistente robot pequeño, gracioso y muy expresivo, hecho con un ESP32. "
-    "Respondes siempre en español, de forma breve (máximo 2-3 frases cortas), "
-    "natural y conversacional, como si hablaras en voz alta. "
-    "No uses markdown, listas, asteriscos ni símbolos raros, porque tu respuesta "
-    "se va a convertir directamente a voz. Tu tono es cálido, divertido y curioso."
+# Configuración de CORS para permitir peticiones desde la interfaz web
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, especifica solo tu dominio
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+# Personalidad del asistente. Ajusta este texto para cambiar su "carácter".
+if USAR_PERFIL_PERSONALIZADO:
+    PERSONALIDAD = generar_prompt_personalizado()
+    logger.info(f"✅ Usando perfil personalizado para {PERFIL_USUARIO['nombre_completo']}")
+else:
+    PERSONALIDAD = os.getenv(
+        "PERSONALIDAD",
+        "Eres un asistente robot pequeño, gracioso y muy expresivo, hecho con un ESP32. "
+        "Respondes siempre en español, de forma breve (máximo 2-3 frases cortas), "
+        "natural y conversacional, como si hablaras en voz alta. "
+        "No uses markdown, listas, asteriscos ni símbolos raros, porque tu respuesta "
+        "se va a convertir directamente a voz. Tu tono es cálido, divertido y curioso."
+    )
 
 # Memoria de conversación en RAM, por dispositivo (se borra si reinicia el servidor)
 historiales: dict[str, list[str]] = {}
@@ -88,6 +111,20 @@ TEMP_DIR.mkdir(exist_ok=True)
 
 def texto_a_voz_wav(texto: str) -> bytes:
     """Convierte texto a audio WAV PCM 16kHz mono (formato fácil para el ESP32)."""
+    
+    # Detectar si usar Google Cloud TTS o gTTS
+    USE_GOOGLE_TTS = os.getenv("USE_GOOGLE_TTS", "false").lower() == "true"
+    
+    if USE_GOOGLE_TTS:
+        try:
+            from tts_google import texto_a_voz_google
+            return texto_a_voz_google(texto)
+        except ImportError:
+            logger.warning("⚠️ Google Cloud TTS no disponible, usando gTTS como fallback")
+        except Exception as e:
+            logger.error(f"❌ Error en Google TTS: {e}, usando gTTS como fallback")
+    
+    # Fallback a gTTS (método actual)
     mp3_path = TEMP_DIR / "respuesta.mp3"
     wav_path = TEMP_DIR / "respuesta.wav"
 
