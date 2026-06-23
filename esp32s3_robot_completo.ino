@@ -70,9 +70,14 @@
 
 #define SAMPLE_RATE       16000          // Hz (16kHz para compatibilidad con API)
 #define BITS_PER_SAMPLE   16             // Bits
-#define RECORD_TIME       5              // Segundos de grabación
+#define RECORD_TIME       5              // Segundos de grabación (reducir a 3 si hay problemas de memoria)
 #define BUFFER_SIZE       512            // Tamaño del buffer I2S
 #define RECORD_BUFFER_SIZE (SAMPLE_RATE * RECORD_TIME * sizeof(int16_t))
+
+// ⚠️ IMPORTANTE: Si ves "Sin memoria para buffer de audio":
+// 1. Arduino IDE > Herramientas > PSRAM > "OPI PSRAM" (o "QSPI PSRAM")
+// 2. Arduino IDE > Herramientas > Partition Scheme > "Huge APP (3MB No OTA/1MB SPIFFS)"
+// 3. Si persiste, reducir RECORD_TIME a 3 segundos
 
 // ============================================================================
 // CONFIGURACIÓN DE PANTALLA
@@ -186,6 +191,29 @@ void setup() {
   Serial.println("╚════════════════════════════════════════╝");
   Serial.println();
   
+  // Verificar PSRAM
+  Serial.println("🔍 Verificando hardware...");
+  Serial.printf("   • Chip: %s\n", ESP.getChipModel());
+  Serial.printf("   • CPU: %d MHz\n", ESP.getCpuFreqMHz());
+  Serial.printf("   • RAM total: %d bytes\n", ESP.getHeapSize());
+  Serial.printf("   • RAM libre: %d bytes\n", ESP.getFreeHeap());
+  
+  if (psramFound()) {
+    Serial.printf("   ✓ PSRAM detectada: %d bytes\n", ESP.getPsramSize());
+    Serial.printf("   • PSRAM libre: %d bytes\n", ESP.getFreePsram());
+  } else {
+    Serial.println("   ❌ ERROR: PSRAM NO DETECTADA");
+    Serial.println();
+    Serial.println("⚠️  SOLUCIÓN INMEDIATA:");
+    Serial.println("   1. Arduino IDE > Herramientas > PSRAM > 'OPI PSRAM'");
+    Serial.println("   2. Si tu ESP32-S3 no tiene PSRAM:");
+    Serial.println("      - Reducir RECORD_TIME de 5 a 2 segundos");
+    Serial.println("      - Recompilar y cargar");
+    Serial.println();
+    // No bloquear, intentar continuar con RAM normal (buffer reducido)
+  }
+  Serial.println();
+  
   // Configurar watchdog (compatible con Arduino Core 2.0.14+)
   #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 14)
     esp_task_wdt_config_t wdt_config = {
@@ -230,14 +258,49 @@ void setup() {
   // 4. Conectar WiFi
   conectarWiFi();
   
-  // 5. Reservar memoria para buffer de audio
-  audioBuffer = (uint8_t*)ps_malloc(RECORD_BUFFER_SIZE);
-  if (!audioBuffer) {
-    Serial.println("❌ Error: No hay memoria suficiente para buffer de audio");
-    mostrarError("Sin Memoria");
+  // 5. Reservar memoria para buffer de audio usando PSRAM
+  Serial.println("\n💾 Reservando memoria para buffer de audio...");
+  Serial.printf("   • RAM libre antes: %d bytes\n", ESP.getFreeHeap());
+  Serial.printf("   • PSRAM libre antes: %d bytes\n", ESP.getFreePsram());
+  Serial.printf("   • Buffer necesario: %d bytes\n", RECORD_BUFFER_SIZE);
+  
+  // Verificar que hay PSRAM disponible
+  if (ESP.getFreePsram() < RECORD_BUFFER_SIZE) {
+    Serial.printf("❌ Error: PSRAM insuficiente (%d bytes disponibles, %d necesarios)\n", 
+                  ESP.getFreePsram(), RECORD_BUFFER_SIZE);
+    Serial.println("⚠️  SOLUCIÓN:");
+    Serial.println("   1. En Arduino IDE: Herramientas > PSRAM > 'OPI PSRAM'");
+    Serial.println("   2. Herramientas > Partition Scheme > 'Huge APP (3MB No OTA/1MB SPIFFS)'");
+    Serial.println("   3. Recompilar y cargar de nuevo");
+    mostrarError("Sin PSRAM");
     estadoActual = ERROR_SISTEMA;
     while(1) { delay(1000); }
   }
+  
+  audioBuffer = (uint8_t*)ps_malloc(RECORD_BUFFER_SIZE);
+  if (!audioBuffer) {
+    Serial.println("❌ Error: No se pudo asignar memoria para buffer de audio");
+    Serial.println("⚠️  Intentando reducir tamaño del buffer...");
+    
+    // Intentar con buffer más pequeño (3 segundos en lugar de 5)
+    size_t bufferReducido = (SAMPLE_RATE * 3 * sizeof(int16_t));
+    Serial.printf("   • Intentando buffer de 3 segundos (%d bytes)\n", bufferReducido);
+    audioBuffer = (uint8_t*)ps_malloc(bufferReducido);
+    
+    if (!audioBuffer) {
+      Serial.println("❌ Error crítico: No hay memoria suficiente");
+      mostrarError("Sin Memoria");
+      estadoActual = ERROR_SISTEMA;
+      while(1) { delay(1000); }
+    }
+    
+    Serial.println("   ✓ Buffer reducido asignado exitosamente");
+  } else {
+    Serial.println("   ✓ Buffer de audio asignado exitosamente");
+  }
+  
+  Serial.printf("   • RAM libre después: %d bytes\n", ESP.getFreeHeap());
+  Serial.printf("   • PSRAM libre después: %d bytes\n", ESP.getFreePsram());
   
   Serial.println("\n✅ Sistema iniciado correctamente");
   Serial.println("📝 Presiona ENTER para iniciar grabación");
