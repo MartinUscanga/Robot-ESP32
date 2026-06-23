@@ -94,6 +94,29 @@
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
 // ============================================================================
+// ENUMERACIONES (DEBEN IR ANTES DE LAS FORWARD DECLARATIONS)
+// ============================================================================
+
+enum Estado {
+  INICIALIZANDO,
+  CONECTANDO_WIFI,
+  ESPERANDO_COMANDO,
+  GRABANDO_AUDIO,
+  ENVIANDO_API,
+  REPRODUCIENDO_RESPUESTA,
+  ERROR_SISTEMA
+};
+
+enum Emocion {
+  FELIZ,
+  TRISTE,
+  PENSANDO,
+  SORPRENDIDO,
+  ENOJADO,
+  HABLANDO
+};
+
+// ============================================================================
 // DECLARACIONES DE FUNCIONES (Forward Declarations)
 // ============================================================================
 
@@ -123,30 +146,6 @@ void mostrarError(String mensaje);
 
 // Utilidades
 String base64Decode(String input);
-
-// ============================================================================
-// ENUMERACIONES
-// ============================================================================
-
-enum Estado {
-  INICIALIZANDO,
-  CONECTANDO_WIFI,
-  ESPERANDO_COMANDO,
-  GRABANDO_AUDIO,
-  ENVIANDO_API,
-  REPRODUCIENDO_RESPUESTA,
-  ERROR_SISTEMA
-};
-
-enum Emocion {
-  FELIZ,
-  TRISTE,
-  PENSANDO,
-
-  SORPRENDIDO,
-  ENOJADO,
-  HABLANDO
-};
 
 // ============================================================================
 // VARIABLES GLOBALES
